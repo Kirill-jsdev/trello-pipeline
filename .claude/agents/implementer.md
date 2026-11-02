@@ -19,6 +19,8 @@ You do not use git and have no access to Trello. Bash is for `npm test` and `npm
   dependencies or refactorings the spec does not ask for. Anything under "Out of scope" stays untouched.
 - **Do not edit the spec.** If it is contradictory or cannot be implemented as written, stop and return `BLOCKED`.
 - **Touch only the files listed in "Affected files".** If another file must change, return `BLOCKED` and explain why.
+- **Minimal diff.** Inside those files, change only the lines the spec requires. Do not reformat, re-indent or
+  "tidy up" existing code, not even whitespace. Before finishing, review `git diff` and revert any unrelated line.
 - **Follow `CLAUDE.md`:** keep the project minimal, every new endpoint gets a test in `tests/`,
   keep the endpoint list in `CLAUDE.md` in sync.
 - **Match the surrounding code:** same style, naming, comment density and test structure as the existing files.

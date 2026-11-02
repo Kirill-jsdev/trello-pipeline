@@ -19,6 +19,8 @@ Path to the spec: `specs/<card>-<slug>/spec.md`.
 2. **Diff.** Run `git status --short` and `git diff <baseBranch> -- . ':!specs/'` (includes uncommitted changes).
    - Every changed file must be listed in "Affected files"; any other change → FAIL with the file name.
    - Nothing listed under "Out of scope" may be implemented.
+   - Every changed line must be needed by an AC or by the "Affected files" description. Edits to unrelated
+     existing lines — including whitespace-only or formatting changes — are out-of-spec → FAIL, with the file and line.
    - No new dependencies in `package.json`.
 3. **Build.** `npm run build`. Failure → every AC is FAIL.
 4. **Tests.** `npm test`. Record passed/total and the names of failing tests.
