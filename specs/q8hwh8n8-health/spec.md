@@ -1,7 +1,7 @@
 # Health endpoint
 
 - Trello: https://trello.com/c/q8hwh8n8/2-create-health-endpoint
-- Status: Approved
+- Status: Implemented
 
 ## Goal
 Provide a lightweight endpoint that lets API users check whether the service is available.

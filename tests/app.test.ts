@@ -17,6 +17,23 @@ describe('GET /sum', () => {
   });
 });
 
+describe('GET /health', () => {
+  it('AC-1: GET /health returns 200', async () => {
+    const res = await request(app).get('/health');
+    assert.equal(res.status, 200);
+  });
+
+  it('AC-2: GET /health returns {"status":"ok"}', async () => {
+    const res = await request(app).get('/health');
+    assert.deepEqual(res.body, { status: 'ok' });
+  });
+
+  it('AC-3: /health endpoint has an automated test', async () => {
+    const res = await request(app).get('/health');
+    assert.equal(res.status, 200);
+  });
+});
+
 describe('GET /hello', () => {
   it('greets World by default', async () => {
     const res = await request(app).get('/hello');
