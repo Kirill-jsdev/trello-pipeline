@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledMcpjsonServers": ["trello"],
+  "permissions": {
+    "allow": [
+      "Bash(npm ci)",
+      "Bash(npm test)",
+      "Bash(npm run build)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git branch --show-current)",
+      "Bash(git fetch:*)",
+      "Bash(git pull --ff-only:*)",
+      "Bash(git switch:*)",
+      "Bash(git checkout -b feature/:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push -u origin feature/:*)",
+      "Bash(gh api repos/Kirill-jsdev/trello-pipeline/commits/:*)",
+      "Bash(gh api repos/Kirill-jsdev/trello-pipeline/compare/:*)",
+      "Bash(gh api repos/Kirill-jsdev/trello-pipeline/branches/:*)",
+      "mcp__trello__trelloReadBoard",
+      "mcp__trello__trelloReadList",
+      "mcp__trello__trelloReadCard",
+      "mcp__trello__trelloReadChecklist",
+      "mcp__trello__trelloReadMember",
+      "mcp__trello__trelloSearch",
+      "mcp__trello__trelloWriteCard"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push origin main:*)",
+      "Bash(git reset --hard:*)",
+      "mcp__trello__trelloWriteBoard",
+      "mcp__trello__trelloWriteList",
+      "mcp__trello__trelloWriteInbox",
+      "mcp__trello__trelloWritePlanner",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-git.mjs\"" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/typecheck.mjs\"" }]
+      }
+    ]
+  }
+}
