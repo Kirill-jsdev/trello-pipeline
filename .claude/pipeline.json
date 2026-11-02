@@ -28,6 +28,9 @@
       }
     }
   },
+  "github": {
+    "repo": "Kirill-jsdev/trello-pipeline"
+  },
   "git": {
     "remote": "origin",
     "baseBranch": "main",
