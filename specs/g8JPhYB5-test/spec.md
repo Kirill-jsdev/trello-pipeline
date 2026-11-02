@@ -1,7 +1,7 @@
 # /test endpoint
 
 - Trello: https://trello.com/c/g8JPhYB5/3-create-test-endpoint
-- Status: Approved
+- Status: Implemented
 
 ## Goal
 Provide a simple endpoint that lets API users check that the service is available.
