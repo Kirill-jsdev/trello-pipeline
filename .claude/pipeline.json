@@ -1,0 +1,42 @@
+{
+  "trello": {
+    "board": {
+      "name": "test-trello-board",
+      "url": "https://trello.com/b/uDkopW6V/test-trello-board",
+      "id": "ari:cloud:trello::board/workspace/6ae84626ff5d6cc77d5796a4/6ae846886c2eeff1b322ded9"
+    },
+    "lists": {
+      "ready": {
+        "name": "To Do",
+        "id": "ari:cloud:trello::list/workspace/6ae84626ff5d6cc77d5796a4/6ae846886c2eeff1b322dedf"
+      },
+      "inProgress": {
+        "name": "In progress",
+        "id": "ari:cloud:trello::list/workspace/6ae84626ff5d6cc77d5796a4/6ae846886c2eeff1b322dee0"
+      },
+      "review": {
+        "name": "Review",
+        "id": "ari:cloud:trello::list/workspace/6ae84626ff5d6cc77d5796a4/6ae846886c2eeff1b322dee1"
+      },
+      "blocked": {
+        "name": "Blocked",
+        "id": "ari:cloud:trello::list/workspace/6ae84626ff5d6cc77d5796a4/6ae869407ec3bfe27864c159"
+      },
+      "done": {
+        "name": "Done",
+        "id": "ari:cloud:trello::list/workspace/6ae84626ff5d6cc77d5796a4/6ae8694e89d8701e702f4c60"
+      }
+    }
+  },
+  "git": {
+    "remote": "origin",
+    "baseBranch": "main",
+    "branchPrefix": "feature/"
+  },
+  "paths": {
+    "specs": "specs/",
+    "specTemplate": "specs/_template.md",
+    "workdir": ".pipeline/"
+  },
+  "maxRetries": 2
+}
