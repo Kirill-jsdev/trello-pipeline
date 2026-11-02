@@ -1,40 +1,40 @@
 <!--
-  Шаблон спецификации. Копия кладётся в specs/<card>-<slug>/spec.md,
-  где <card> — short link карточки Trello (например, 54c0NZmm), <slug> — kebab-case имя фичи.
-  Спека — единственный источник требований для implementer и verifier: всё, чего здесь нет, не реализуется.
-  HTML-комментарии из шаблона в готовую спеку не переносятся.
+  Spec template. A copy goes to specs/<card>-<slug>/spec.md,
+  where <card> is the Trello card short link (e.g. 54c0NZmm) and <slug> is the feature name in kebab-case.
+  The spec is the single source of requirements for implementer and verifier: anything not in it is not implemented.
+  Do not copy the template's HTML comments into the finished spec.
 -->
-# <Название фичи>
+# <Feature name>
 
-- Trello: <URL карточки>
-- Статус: Draft | Approved | Implemented
+- Trello: <card URL>
+- Status: Draft | Approved | Implemented
 
-## Цель
-<!-- 1–2 предложения: какую проблему решает фича. -->
-<1–2 предложения>
+## Goal
+<!-- 1–2 sentences: what problem the feature solves. -->
+<1–2 sentences>
 
 ## User Story
-Как <роль>, я хочу <действие>, чтобы <ценность>.
+As a <role>, I want <action>, so that <value>.
 
 ## Acceptance Criteria
 <!--
-  Нумерация AC-1, AC-2, … сквозная и не меняется после коммита спеки.
-  Каждый пункт проверяем: наблюдаемое поведение (метод, путь, статус, тело ответа) или факт о репозитории.
+  AC-1, AC-2, … numbering is sequential and does not change after the spec is committed.
+  Every item is verifiable: observable behavior (method, path, status, response body) or a fact about the repository.
 -->
-- AC-1: <проверяемое условие>
+- AC-1: <verifiable condition>
 - AC-2: …
 
-## Затронутые файлы
-- `<путь>` — <изменение>
+## Affected files
+- `<path>` — <change>
 
-## План тестов
+## Test plan
 <!--
-  Каждый AC покрыт хотя бы одним тестом или проверкой; название теста начинается с AC-ID.
-  Для AC без отдельного теста (например, «существующие тесты проходят») указать проверку: `npm test`.
+  Every AC is covered by at least one test or check; the test name starts with the AC ID.
+  For an AC without a dedicated test (e.g. "existing tests continue to pass"), name the check: `npm test`.
 -->
-| AC | Тест | Файл |
+| AC | Test | File |
 |---|---|---|
-| AC-1 | `AC-1: <название теста>` | `tests/<файл>.test.ts` |
+| AC-1 | `AC-1: <test name>` | `tests/<file>.test.ts` |
 
-## Вне рамок
-- <что не делается>
+## Out of scope
+- <what is not done>
