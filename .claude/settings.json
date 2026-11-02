@@ -6,6 +6,7 @@
       "Bash(npm ci)",
       "Bash(npm test)",
       "Bash(npm run build)",
+      "Bash(npx tsx -e:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
