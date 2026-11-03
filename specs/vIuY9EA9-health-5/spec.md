@@ -1,7 +1,7 @@
 # Health-5 endpoint
 
 - Trello: https://trello.com/c/vIuY9EA9/10-create-health-5-endpoint
-- Status: Approved
+- Status: Implemented
 
 ## Goal
 Provide a `/health-5` endpoint that lets clients check whether the service is available.

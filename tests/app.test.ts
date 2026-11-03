@@ -17,6 +17,24 @@ describe('GET /sum', () => {
   });
 });
 
+describe('GET /health-5', () => {
+  it('AC-1: GET /health-5 returns status 200', async () => {
+    const res = await request(app).get('/health-5');
+    assert.equal(res.status, 200);
+  });
+
+  it('AC-2: GET /health-5 returns body {"status":"ok"}', async () => {
+    const res = await request(app).get('/health-5');
+    assert.deepEqual(res.body, { status: 'ok' });
+  });
+
+  it('AC-3: GET /health-5 is exercised via Supertest against the app', async () => {
+    const res = await request(app).get('/health-5');
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, { status: 'ok' });
+  });
+});
+
 describe('GET /hello', () => {
   it('greets World by default', async () => {
     const res = await request(app).get('/hello');
