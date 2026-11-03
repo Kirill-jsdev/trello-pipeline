@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pipeline Dependency Map</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface-2: #efeee9;
+    --text: #1d1d1b;
+    --muted: #6b6a65;
+    --border: #dcdad3;
+    --entry: #64748b;
+    --orch: #7c3aed;
+    --skill: #2563eb;
+    --agent: #0f8a6a;
+    --artifact: #b7791f;
+    --config: #8a6d3b;
+    --external: #c2410c;
+    --guard: #be123c;
+    --loop: #db2777;
+    --tint: 0.10;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141413;
+      --surface: #1e1e1c;
+      --surface-2: #272724;
+      --text: #ecebe6;
+      --muted: #9b9a93;
+      --border: #3a3935;
+      --entry: #94a3b8;
+      --orch: #a78bfa;
+      --skill: #60a5fa;
+      --agent: #34d399;
+      --artifact: #f2b84b;
+      --config: #c8a978;
+      --external: #fb923c;
+      --guard: #fb7185;
+      --loop: #f472b6;
+      --tint: 0.16;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141413;
+    --surface: #1e1e1c;
+    --surface-2: #272724;
+    --text: #ecebe6;
+    --muted: #9b9a93;
+    --border: #3a3935;
+    --entry: #94a3b8;
+    --orch: #a78bfa;
+    --skill: #60a5fa;
+    --agent: #34d399;
+    --artifact: #f2b84b;
+    --config: #c8a978;
+    --external: #fb923c;
+    --guard: #fb7185;
+    --loop: #f472b6;
+    --tint: 0.16;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+  }
+  code, .mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.9em; }
+
+  .slide {
+    position: absolute; inset: 0 0 56px 0;
+    padding: 40px 48px 24px;
+    overflow-y: auto;
+    display: none;
+  }
+  .slide.active { display: block; }
+  .inner { max-width: 1120px; margin: 0 auto; }
+  .eyebrow { color: var(--muted); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 6px; }
+  h1 { font-size: clamp(32px, 5vw, 52px); line-height: 1.1; margin: 0 0 16px; }
+  h2 { font-size: clamp(24px, 3vw, 34px); line-height: 1.2; margin: 0 0 8px; }
+  .lead { color: var(--muted); font-size: 18px; max-width: 760px; margin: 0 0 24px; }
+  p { margin: 0 0 12px; }
+
+  .grid { display: grid; gap: 14px; }
+  .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p, .card li { color: var(--muted); font-size: 14px; }
+  .card ul { margin: 0; padding-left: 18px; }
+  .card.k { border-left: 4px solid var(--c); }
+
+  .pill {
+    display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px;
+    border: 1px solid var(--c, var(--border)); color: var(--c, var(--muted));
+    background: color-mix(in srgb, var(--c, transparent) calc(var(--tint) * 100%), transparent);
+    white-space: nowrap;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); border-radius: 10px; overflow: hidden; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; font-size: 13px; }
+  tr:last-child td { border-bottom: 0; }
+  td.c, th.c { text-align: center; }
+  .dot { color: var(--skill); font-size: 16px; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+
+  /* title slide */
+  .title-wrap { min-height: calc(100vh - 160px); display: flex; flex-direction: column; justify-content: center; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+
+  /* chain */
+  .chain { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 8px 0 20px; }
+  .chain .step { flex: 1 1 150px; background: var(--surface); border: 1px solid var(--border); border-top: 4px solid var(--skill); border-radius: 10px; padding: 12px; }
+  .chain .step b { display: block; font-size: 14px; }
+  .chain .step code { color: var(--agent); }
+  .chain .step small { color: var(--muted); display: block; font-size: 12px; }
+  .chain .arrow { align-self: center; color: var(--muted); }
+
+  /* loop diagram */
+  .loop { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: center; margin: 12px 0 20px; }
+  .box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; text-align: center; }
+  .box b { display: block; }
+  .box small { color: var(--muted); font-size: 12px; }
+  .ar { color: var(--muted); text-align: center; font-size: 13px; }
+
+  /* graph */
+  .graph-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+  .graph-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
+  #graph { width: 100%; height: auto; display: block; }
+  #graph .node { cursor: pointer; }
+  #graph .node rect { stroke-width: 1.5; }
+  #graph .node text { fill: var(--text); pointer-events: none; }
+  #graph .node .sub { fill: var(--muted); }
+  #graph .edge { fill: none; stroke-width: 1.6; transition: opacity .15s; }
+  #graph .dim { opacity: .12; }
+  #graph .elabel { font-size: 11px; fill: var(--muted); }
+  .toggles { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .toggles label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); cursor: pointer; user-select: none; }
+  .toggles .sw { width: 18px; height: 0; border-top: 2px solid var(--c); }
+  .toggles .sw.dash { border-top-style: dashed; }
+  .toggles .sw.dot { border-top-style: dotted; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 14px; align-self: start; }
+  .panel h3 { margin: 0 0 4px; font-size: 16px; }
+  .panel .desc { color: var(--muted); margin-bottom: 10px; }
+  .panel h4 { margin: 12px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .panel ul { margin: 0; padding: 0; list-style: none; }
+  .panel li { padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .panel li:last-child { border-bottom: 0; }
+  .panel li b { font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+  .panel li span { display: block; color: var(--muted); font-size: 13px; }
+
+  /* nav */
+  nav {
+    position: fixed; left: 0; right: 0; bottom: 0; height: 56px;
+    display: flex; align-items: center; gap: 12px; padding: 0 16px;
+    background: var(--surface); border-top: 1px solid var(--border);
+  }
+  nav button {
+    font: inherit; font-size: 14px; color: var(--text); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer;
+  }
+  nav button:disabled { opacity: .4; cursor: default; }
+  .progress { flex: 1; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
+  .progress div { height: 100%; background: var(--orch); width: 0; transition: width .2s; }
+  #counter { font-size: 13px; color: var(--muted); min-width: 56px; text-align: right; }
+
+  @media (max-width: 900px) {
+    .graph-layout { grid-template-columns: 1fr; }
+    .g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .slide { padding: 24px 16px 16px; }
+    .g2, .g3 { grid-template-columns: 1fr; }
+    .loop { grid-template-columns: 1fr; }
+    .loop .ar { transform: rotate(90deg); }
+    .chain .arrow { display: none; }
+    nav { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide">
+  <div class="inner title-wrap">
+    <p class="eyebrow">AI pipeline · Trello card → GitHub commit</p>
+    <h1>How the pipeline's parts depend on each other</h1>
+    <p class="lead">One orchestrator, four stage skills, three subagents, plus the files, config, external systems and guardrails that connect them.</p>
+    <div class="legend">
+      <span class="pill" style="--c:var(--entry)">Entry point</span>
+      <span class="pill" style="--c:var(--orch)">Orchestrator</span>
+      <span class="pill" style="--c:var(--skill)">Skill</span>
+      <span class="pill" style="--c:var(--agent)">Subagent</span>
+      <span class="pill" style="--c:var(--artifact)">Artifact</span>
+      <span class="pill" style="--c:var(--config)">Config</span>
+      <span class="pill" style="--c:var(--external)">External system</span>
+      <span class="pill" style="--c:var(--guard)">Guardrail</span>
+    </div>
+    <p class="lead" style="margin-top:28px;font-size:14px">Use ← → or the buttons below to navigate.</p>
+  </div>
+</section>
+
+<!-- 2. Building blocks -->
+<section class="slide">
+  <div class="inner">
+    <p class="eyebrow">Overview</p>
+    <h2>Building blocks, layer by layer</h2>
+    <p class="lead">Each layer only calls the one below it. Files and the config carry state between them, and guardrails apply to all of them.</p>
+    <div class="grid g3">
+      <div class="card k" style="--c:var(--entry)">
+        <h3>Entry points</h3>
+        <ul>
+          <li><code>/trello-to-commit</code> in an interactive session</li>
+          <li><code>scripts/run-pipeline.mjs</code>: headless <code>claude -p</code></li>
+        </ul>
+      </div>
+      <div class="card k" style="--c:var(--orch)">
+        <h3>Orchestrator</h3>
+        <ul>
+          <li><code>trello-to-commit</code> runs the stages in order</li>
+          <li>Reads each stage's result block and stops at the first failure</li>
+        </ul>
+      </div>
+      <div class="card k" style="--c:var(--skill)">
+        <h3>Stage skills</h3>
+        <ul>
+          <li><code>trello-intake</code></li>
+          <li><code>ship-branch</code> (<code>spec</code> / <code>code</code>)</li>
+          <li><code>implement-spec</code></li>
+          <li><code>trello-report</code></li>
+        </ul>
+      </div>
+      <div class="card k" style="--c:var(--agent)">
+        <h3>Subagents</h3>
+        <ul>
+          <li><code>trello-analyst</code> (analyst)</li>
+          <li><code>implementer</code> (developer)</li>
+          <li><code>verifier</code> (QA)</li>
+        </ul>
+      </div>
+      <div class="card k" style="--c:var(--artifact)">
+        <h3>Shared state</h3>
+        <ul>
+          <li><code>.claude/pipeline.json</code>: config</li>
+          <li><code>specs/_template.md</code>, <code>spec.md</code></li>
+          <li><code>.pipeline/&lt;card&gt;/*.md</code>: reports</li>
+        </ul>
+      </div>
+      <div class="card k" style="--c:var(--guard)">
+        <h3>External systems &amp; guardrails</h3>
+        <ul>
+          <li>Trello MCP, git, GitHub (<code>gh api</code>), CI</li>
+          <li><code>settings.json</code>, <code>guard-git</code>, <code>typecheck</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Interactive map -->
+<section class="slide">
+  <div class="inner">
+    <p class="eyebrow">Interactive</p>
+    <h2>Dependency map</h2>
+    <p class="lead" style="margin-bottom:12px">Click a component to see what it depends on and what depends on it. Turn layers on and off with the toggles.</p>
+    <div class="toggles" id="toggles"></div>
+    <div class="graph-layout">
+      <div class="graph-box"><svg id="graph" viewBox="0 0 1000 590" role="img" aria-label="Pipeline dependency graph"></svg></div>
+      <div class="panel" id="panel"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Orchestrator contract -->
+<section class="slide">
+  <div class="inner">
+    <p class="eyebrow">Orchestrator → stage skills</p>
+    <h2>Stages communicate only through result blocks</h2>
+    <p class="lead"><code>trello-to-commit</code> does none of the stages' work. It runs a skill, reads the status line the skill ends with and decides whether to continue. The block format is the contract between them.</p>
+    <div class="chain">
+      <div class="step"><b>1 · trello-intake</b><code>INTAKE: READY</code><small>spec Approved, card In progress</small></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>2 · ship-branch spec</b><code>SHIP_SPEC: OK</code><small>branch + spec commit</small></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>3 · implement-spec</b><code>IMPLEMENT: PASS</code><small>verified working tree</small></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>4 · ship-branch code</b><code>SHIP_CODE: OK</code><small>code commit pushed</small></div>
+      <div class="arrow">→</div>
+      <div class="step"><b>5 · trello-report</b><code>REPORT: OK</code><small>card in Review</small></div>
+      <div class="arrow">→</div>
+      <div class="step" style="border-top-color:var(--orch)"><b>Pipeline</b><code>PIPELINE: OK</code><small>parsed by run-pipeline.mjs → exit 0</small></div>
+    </div>
+    <h3 style="margin:0 0 8px;font-size:16px">Who explains a stop on the card</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Stage result</th><th>Card comment + move to Blocked done by</th></tr>
+      <tr><td><code>INTAKE: BLOCKED</code></td><td><code>trello-intake</code> (questions from <code>trello-analyst</code>)</td></tr>
+      <tr><td><code>IMPLEMENT: FAIL | BLOCKED</code></td><td><code>implement-spec</code> (last <code>verifier</code> AC table)</td></tr>
+      <tr><td><code>SHIP_SPEC / SHIP_CODE / REPORT: FAILED</code></td><td><code>trello-to-commit</code> itself</td></tr>
+      <tr><td><code>INTAKE: PREFLIGHT_FAILED | EXISTS</code></td><td>Nobody. The card is left untouched</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<!-- 5. Skills → subagents -->
+<section class="slide">
+  <div class="inner">
+    <p class="eyebrow">Stage skills → subagents</p>
+    <h2>Two skills delegate to subagents</h2>
+    <p class="lead">Subagents never call each other. The skill in the main session runs them and passes data between them.</p>
+    <div class="grid g2">
+      <div class="card k" style="--c:var(--skill)">
+        <h3><code>trello-intake</code> → <code>trello-analyst</code></h3>
+        <ul>
+          <li>Runs the analyst on the card URL and handles <code>READY</code>, <code>NEEDS_CLARIFICATION</code> or <code>EXISTS</code></li>
+          <li>Validates the spec against <code>_template.md</code>; on violations it reruns the analyst <b>once</b></li>
+          <li>Promotes <code>Status: Draft → Approved</code>, which the analyst cannot do</li>
+        </ul>
+      </div>
+      <div class="card k" style="--c:var(--skill)">
+        <h3><code>implement-spec</code> → <code>implementer</code> + <code>verifier</code></h3>
+        <ul>
+          <li>Never edits code itself. Every change goes through <code>implementer</code>, every verdict through <code>verifier</code></li>
+          <li>Saves each verdict to <code>verify-&lt;n&gt;.md</code>, the final one to <code>verify.md</code></li>
+          <li>Retry count comes from <code>maxRetries</code> in <code>pipeline.json</code></li>
+        </ul>
+      </div>
+    </div>
+    <h3 style="margin:20px 0 4px;font-size:16px">The implement → verify loop</h3>
+    <div class="loop">
+      <div class="box" style="border-top:4px solid var(--agent)"><b>implementer</b><small>code + tests from spec<br>attempt n</small></div>
+      <div class="ar">STATUS: DONE →</div>
+      <div class="box" style="border-top:4px solid var(--agent)"><b>verifier</b><small>build · tests · smoke · diff review</small></div>
+      <div class="ar">PASS →</div>
+      <div class="box" style="border-top:4px solid var(--artifact)"><b>verify.md</b><small>→ ship-branch code</small></div>
+    </div>
+    <div class="grid g2">
+      <div class="card k" style="--c:var(--loop)"><h3>FAIL and n ≤ maxRetries</h3><p>The full verifier report (AC table + <code>FIX</code>) goes back to <code>implementer</code>: "fix only the FAIL items".</p></div>
+      <div class="card k" style="--c:var(--guard)"><h3>FAIL after all retries, or implementer BLOCKED</h3><p><code>implement-spec</code> comments on the card, moves it to Blocked and leaves the working tree for inspection.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Files -->
+<section class="slide">
+  <div class="inner">
+    <p class="eyebrow">Data dependencies</p>
+    <h2>Handoffs go through files</h2>
+    <p class="lead">Stages share no memory. Each one reads what an earlier stage wrote to disk, so these file formats are dependencies too.</p>
+    <div class="table-wrap"><table>
+      <tr><th>File</th><th>Written by</th><th>Read by</th></tr>
+      <tr><td><code>specs/_template.md</code></td><td>human</td><td><code>trello-analyst</code> (format), <code>trello-intake</code> (validation)</td></tr>
+      <tr><td><code>specs/&lt;card&gt;-&lt;slug&gt;/spec.md</code></td><td><code>trello-analyst</code> (Draft) → <code>trello-intake</code> (Approved) → <code>ship-branch code</code> (Implemented)</td><td><code>ship-branch</code>, <code>implement-spec</code>, <code>implementer</code>, <code>verifier</code></td></tr>
+      <tr><td><code>.pipeline/&lt;card&gt;/verify-&lt;n&gt;.md</code></td><td><code>implement-spec</code> (verifier output)</td><td><code>trello-report</code> (attempt count)</td></tr>
+      <tr><td><code>.pipeline/&lt;card&gt;/verify.md</code></td><td><code>implement-spec</code></td><td><code>ship-branch code</code> (needs <code>STATUS: PASS</code>), <code>trello-report</code> (AC table, <code>CHECKS</code>)</td></tr>
+      <tr><td><code>.pipeline/&lt;card&gt;/ship.md</code></td><td><code>ship-branch code</code></td><td><code>trello-report</code> (branch, commits, URLs)</td></tr>
+      <tr><td><code>.pipeline/&lt;card&gt;/report.md</code></td><td><code>trello-report</code></td><td>human</td></tr>
+      <tr><td><code>.pipeline/&lt;card&gt;/run.md</code></td><td><code>trello-to-commit</code></td><td>human</td></tr>
+      <tr><td><code>.pipeline/&lt;card&gt;/run.log</code></td><td><code>run-pipeline.mjs</code></td><td>human</td></tr>
+    </table></div>
+    <p class="lead" style="margin-top:14px;font-size:15px">The spec moves through three components, and each one changes its <code>Status</code>. Each stage checks the status set by the stage before it.</p>
+  </div>
+</section>
+
+<!-- 7. Config -->
+<section class="slide">
+  <div class="inner">
+    <p class="eyebrow">Config dependencies</p>
+    <h2>One config, many readers</h2>
+    <p class="lead"><code>.claude/pipeline.json</code> is the most widely shared dependency. Changing a key affects every component marked in its row.</p>
+    <div class="table-wrap"><table id="cfg"></table></div>
+    <p class="lead" style="margin-top:14px;font-size:15px">⚠ <code>.claude/settings.json</code> hardcodes <code>Kirill-jsdev/trello-pipeline</code> in the <code>gh api</code> allow rules. Changing <code>github.repo</code> without updating them breaks the GitHub check in headless mode.</p>
+  </div>
+</section>
+
+<!-- 8. External systems -->
+<section class="slide">
+  <div class="inner">
+    <p class="eyebrow">External dependencies</p>
+    <h2>Who touches Trello, code and git</h2>
+    <p class="lead">Access is split by role. Subagents get only the tools in their frontmatter, and all writes to Trello and git happen in the skills, in the main session.</p>
+    <div class="table-wrap"><table>
+      <tr><th>Component</th><th>Trello</th><th>Code</th><th>git / GitHub</th></tr>
+      <tr><td><span class="pill" style="--c:var(--agent)">trello-analyst</span></td><td>read card, checklists</td><td>read; write the spec only</td><td>—</td></tr>
+      <tr><td><span class="pill" style="--c:var(--agent)">implementer</span></td><td>—</td><td>read + write; <code>npm test</code>, <code>npm run build</code></td><td>—</td></tr>
+      <tr><td><span class="pill" style="--c:var(--agent)">verifier</span></td><td>—</td><td>read only; build, tests, smoke</td><td>read-only <code>git diff</code></td></tr>
+      <tr><td><span class="pill" style="--c:var(--skill)">trello-intake</span></td><td>read; comment; → In progress / Blocked</td><td><code>npm ci</code>, <code>npm test</code> (preflight)</td><td><code>fetch</code>, <code>pull --ff-only</code></td></tr>
+      <tr><td><span class="pill" style="--c:var(--skill)">ship-branch</span></td><td>—</td><td>spec status → Implemented</td><td>branch, commit, push <code>feature/*</code>, <code>gh api</code> GET</td></tr>
+      <tr><td><span class="pill" style="--c:var(--skill)">implement-spec</span></td><td>comment; → Blocked</td><td>—</td><td><code>git status</code></td></tr>
+      <tr><td><span class="pill" style="--c:var(--skill)">trello-report</span></td><td>comment; → Review</td><td>—</td><td><code>git log</code></td></tr>
+      <tr><td><span class="pill" style="--c:var(--orch)">trello-to-commit</span></td><td>comment; → Blocked on Ship/Report failure</td><td>—</td><td>—</td></tr>
+      <tr><td><span class="pill" style="--c:var(--external)">GitHub Actions CI</span></td><td>—</td><td>build + tests on every push to <code>feature/**</code></td><td>triggered by <code>ship-branch</code>'s push</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<!-- 9. Guardrails -->
+<section class="slide">
+  <div class="inner">
+    <p class="eyebrow">Cross-cutting dependencies</p>
+    <h2>Guardrails wrap every component</h2>
+    <p class="lead">These are not called by any component. Claude Code applies them to every tool call, in the main session and in subagents, whether the run is interactive or headless.</p>
+    <div class="grid g2">
+      <div class="card k" style="--c:var(--guard)">
+        <h3><code>.claude/settings.json</code>: allow / deny</h3>
+        <ul>
+          <li>Headless runs have no prompts, so a command not on the allow list is rejected</li>
+          <li>Every new command a skill or agent uses must be added here</li>
+          <li>Denies force-push, push to <code>main</code>, <code>reset --hard</code>, board edits, <code>.env</code></li>
+        </ul>
+      </div>
+      <div class="card k" style="--c:var(--guard)">
+        <h3><code>guard-git.mjs</code>: PreToolUse on Bash</h3>
+        <ul>
+          <li>Reads <code>git.baseBranch</code> from <code>pipeline.json</code></li>
+          <li>Blocks commits/pushes to the base branch, force-push, <code>--all</code>/<code>--mirror</code>/<code>--delete</code>, non-GET <code>gh api</code></li>
+          <li>Mainly protects <code>ship-branch</code>; parses chained commands too</li>
+        </ul>
+      </div>
+      <div class="card k" style="--c:var(--guard)">
+        <h3><code>typecheck.mjs</code>: PostToolUse on Edit/Write</h3>
+        <ul>
+          <li>Runs <code>tsc --noEmit</code> after each <code>.ts</code> edit</li>
+          <li>Gives <code>implementer</code> type errors right away, before <code>verifier</code> runs, which saves retries</li>
+        </ul>
+      </div>
+      <div class="card k" style="--c:var(--external)">
+        <h3>GitHub Actions CI</h3>
+        <ul>
+          <li>Runs outside the agent: <code>npm ci</code>, build and tests on <code>feature/**</code></li>
+          <li>Only depends on the pushed branch, so it doesn't rely on the verifier's verdict</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Change impact -->
+<section class="slide">
+  <div class="inner">
+    <p class="eyebrow">Practical use</p>
+    <h2>If you change X, check Y</h2>
+    <p class="lead">These couplings follow from the map above.</p>
+    <div class="table-wrap"><table>
+      <tr><th>You change…</th><th>Also update or re-check</th></tr>
+      <tr><td>Sections of <code>specs/_template.md</code></td><td>Validation in <code>trello-intake</code>; section names used by <code>implementer</code>, <code>verifier</code>, <code>ship-branch</code> ("Affected files", "Test plan", "Out of scope")</td></tr>
+      <tr><td>A stage's result block</td><td><code>trello-to-commit</code> continue conditions; for <code>PIPELINE:</code>, the parser in <code>run-pipeline.mjs</code></td></tr>
+      <tr><td><code>verifier</code> output format</td><td><code>implement-spec</code> (PASS/FAIL), <code>ship-branch code</code> (<code>STATUS: PASS</code>), <code>trello-report</code> (AC table, <code>CHECKS</code>)</td></tr>
+      <tr><td>Keys in <code>ship.md</code></td><td><code>trello-report</code></td></tr>
+      <tr><td><code>github.repo</code></td><td><code>gh api</code> allow rules in <code>.claude/settings.json</code></td></tr>
+      <tr><td><code>git.baseBranch</code></td><td>Takes effect in skills, <code>verifier</code> and <code>guard-git</code> automatically; check <code>deny</code> rules that name <code>main</code></td></tr>
+      <tr><td>Trello lists</td><td>List IDs in <code>pipeline.json</code></td></tr>
+      <tr><td>A new shell command in any skill or agent</td><td><code>permissions.allow</code>; the subagent's <code>tools</code> frontmatter</td></tr>
+      <tr><td>App layout (<code>src/app.ts</code>)</td><td>Smoke check in <code>verifier</code></td></tr>
+      <tr><td>Any agent or skill file</td><td>Restart the Claude Code session; definitions load at startup</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<!-- 11. Takeaways -->
+<section class="slide">
+  <div class="inner">
+    <p class="eyebrow">Summary</p>
+    <h2>Key takeaways</h2>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card k" style="--c:var(--orch)"><h3>Calls go in one direction</h3><p>entry → orchestrator → stage skill → subagent. Nothing calls back up, and subagents never call each other.</p></div>
+      <div class="card k" style="--c:var(--artifact)"><h3>Data goes through files</h3><p>The spec and the <code>.pipeline/&lt;card&gt;/</code> reports are the interfaces between stages. Their formats are contracts.</p></div>
+      <div class="card k" style="--c:var(--config)"><h3>One config</h3><p><code>pipeline.json</code> is read by nearly every component, including a hook. <code>settings.json</code> is the one place that duplicates part of it.</p></div>
+      <div class="card k" style="--c:var(--guard)"><h3>Guardrails apply everywhere</h3><p>Permissions and hooks wrap all components, so safety doesn't depend on any one prompt being followed.</p></div>
+    </div>
+  </div>
+</section>
+
+<nav>
+  <button id="prev" aria-label="Previous slide">←</button>
+  <button id="next" aria-label="Next slide">→</button>
+  <div class="progress"><div id="bar"></div></div>
+  <span id="counter"></span>
+  <button id="theme" aria-label="Toggle theme">◐</button>
+</nav>
+
+<script>
+/* ---------- slides ---------- */
+const slides = [...document.querySelectorAll('.slide')];
+let cur = 0;
+function show(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.classList.toggle('active', k === cur));
+  document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
+  document.getElementById('bar').style.width = ((cur + 1) / slides.length * 100) + '%';
+  document.getElementById('prev').disabled = cur === 0;
+  document.getElementById('next').disabled = cur === slides.length - 1;
+  history.replaceState(null, '', '#' + (cur + 1));
+}
+document.getElementById('prev').onclick = () => show(cur - 1);
+document.getElementById('next').onclick = () => show(cur + 1);
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+  if (e.key === 'Home') show(0);
+  if (e.key === 'End') show(slides.length - 1);
+});
+document.getElementById('theme').onclick = () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+};
+show((parseInt(location.hash.slice(1), 10) || 1) - 1);
+
+/* ---------- config matrix ---------- */
+const cfgCols = ['trello-to-commit', 'trello-intake', 'ship-branch', 'implement-spec', 'trello-report', 'trello-analyst', 'verifier', 'run-pipeline', 'guard-git'];
+const cfgRows = [
+  ['trello.lists.ready', ['trello-intake']],
+  ['trello.lists.inProgress', ['trello-intake']],
+  ['trello.lists.blocked', ['trello-to-commit', 'trello-intake', 'implement-spec']],
+  ['trello.lists.review', ['trello-report']],
+  ['git.remote', ['trello-intake', 'ship-branch']],
+  ['git.baseBranch', ['trello-intake', 'ship-branch', 'verifier', 'guard-git']],
+  ['git.branchPrefix', ['ship-branch', 'implement-spec']],
+  ['github.repo', ['ship-branch']],
+  ['paths.specs', ['trello-intake', 'ship-branch', 'implement-spec', 'trello-analyst']],
+  ['paths.specTemplate', ['trello-intake', 'trello-analyst']],
+  ['paths.workdir', ['ship-branch', 'implement-spec', 'trello-report', 'run-pipeline']],
+  ['maxRetries', ['implement-spec']],
+];
+document.getElementById('cfg').innerHTML =
+  '<tr><th>Key</th>' + cfgCols.map(c => `<th class="c mono" style="font-size:11px">${c}</th>`).join('') + '</tr>' +
+  cfgRows.map(([k, used]) => `<tr><td><code>${k}</code></td>` +
+    cfgCols.map(c => `<td class="c">${used.includes(c) ? '<span class="dot">●</span>' : ''}</td>`).join('') + '</tr>').join('');
+
+/* ---------- dependency graph ---------- */
+const KIND = {
+  entry: ['--entry', 'Entry point'], orch: ['--orch', 'Orchestrator skill'], skill: ['--skill', 'Stage skill'],
+  agent: ['--agent', 'Subagent'], artifact: ['--artifact', 'Artifact'], config: ['--config', 'Config'], external: ['--external', 'External system'],
+};
+const nodes = {
+  human:       { x: 330, y: 45,  label: 'Developer',          sub: '/trello-to-commit',     kind: 'entry',    desc: 'Starts the pipeline in an interactive Claude Code session.' },
+  runner:      { x: 670, y: 45,  label: 'run-pipeline.mjs',   sub: 'headless · claude -p',  kind: 'entry',    desc: 'Headless runner. Passes /trello-to-commit to claude -p and maps the PIPELINE block to an exit code.' },
+  orch:        { x: 500, y: 150, label: 'trello-to-commit',   sub: 'orchestrator',          kind: 'orch',     desc: 'Runs the five stages in order and stops at the first failure. Does no stage work itself.' },
+  intake:      { x: 125, y: 275, label: 'trello-intake',      sub: 'stage 1',               kind: 'skill',    desc: 'Preflight, card → approved spec, card → In progress.' },
+  ship:        { x: 375, y: 275, label: 'ship-branch',        sub: 'stages 2 (spec) · 4 (code)', kind: 'skill', desc: 'One skill, two modes: spec commit on a new branch, then code commit + push + GitHub check.' },
+  impl:        { x: 625, y: 275, label: 'implement-spec',     sub: 'stage 3',               kind: 'skill',    desc: 'implementer → verifier loop with up to maxRetries retries.' },
+  report:      { x: 875, y: 275, label: 'trello-report',      sub: 'stage 5',               kind: 'skill',    desc: 'Posts the result on the card and moves it to Review.' },
+  analyst:     { x: 125, y: 405, label: 'trello-analyst',     sub: 'subagent · analyst',    kind: 'agent',    desc: 'Turns a card into a Draft spec. Reads Trello and code; writes only the spec.' },
+  implementer: { x: 540, y: 405, label: 'implementer',        sub: 'subagent · developer',  kind: 'agent',    desc: 'Writes code and tests strictly by the spec. No git, no Trello.' },
+  verifier:    { x: 770, y: 405, label: 'verifier',           sub: 'subagent · QA',         kind: 'agent',    desc: 'Read-only. Build, tests, smoke, diff review → PASS/FAIL per AC.' },
+  config:      { x: 85,  y: 540, label: 'pipeline.json',      sub: 'config',                kind: 'config',   desc: 'Board lists, git settings, repo, paths, maxRetries.' },
+  template:    { x: 250, y: 540, label: '_template.md',       sub: 'spec format',           kind: 'artifact', desc: 'Defines the spec sections.' },
+  spec:        { x: 415, y: 540, label: 'spec.md',            sub: 'Draft → Approved → Impl.', kind: 'artifact', desc: 'The single source of requirements for implementation and verification.' },
+  work:        { x: 580, y: 540, label: '.pipeline/<card>/',  sub: 'verify · ship · report', kind: 'artifact', desc: 'Working files that pass results between stages. Not tracked by git.' },
+  trello:      { x: 745, y: 540, label: 'Trello MCP',         sub: 'cards · comments',      kind: 'external', desc: 'mcp.trello.com: read cards, comment, move between lists.' },
+  github:      { x: 915, y: 540, label: 'git · GitHub',       sub: 'branch · push · gh api', kind: 'external', desc: 'Local git plus read-only gh api checks on GitHub.' },
+};
+const LAYERS = {
+  calls:     { name: 'Calls',           color: '--orch',     dash: '' },
+  loop:      { name: 'Retry loop',      color: '--loop',     dash: '6 4' },
+  artifacts: { name: 'Files',           color: '--artifact', dash: '5 4' },
+  config:    { name: 'Config',          color: '--config',   dash: '2 4' },
+  external:  { name: 'External',        color: '--external', dash: '' },
+};
+const edges = [
+  ['human', 'orch', 'calls', 'runs /trello-to-commit <card>'],
+  ['runner', 'orch', 'calls', 'claude -p "/trello-to-commit <card>"; parses PIPELINE: → exit code'],
+  ['orch', 'intake', 'calls', 'stage 1 · continue on INTAKE: READY', '1'],
+  ['orch', 'ship', 'calls', 'stage 2 on SHIP_SPEC: OK · stage 4 on SHIP_CODE: OK', '2 · 4'],
+  ['orch', 'impl', 'calls', 'stage 3 · continue on IMPLEMENT: PASS', '3'],
+  ['orch', 'report', 'calls', 'stage 5 · continue on REPORT: OK', '5'],
+  ['intake', 'analyst', 'calls', 'runs subagent; reruns once if validation fails'],
+  ['impl', 'implementer', 'calls', 'runs subagent; passes previous FAIL report on retry'],
+  ['impl', 'verifier', 'calls', 'runs subagent after every implementer attempt'],
+  ['verifier', 'implementer', 'loop', 'FAIL report + FIX goes back via implement-spec (≤ maxRetries)'],
+  ['template', 'analyst', 'artifacts', 'spec format'],
+  ['template', 'intake', 'artifacts', 'validation rules'],
+  ['analyst', 'spec', 'artifacts', 'writes spec · Status: Draft'],
+  ['intake', 'spec', 'artifacts', 'validates · Status: Approved'],
+  ['spec', 'ship', 'artifacts', 'spec mode commits it; code mode sets Status: Implemented'],
+  ['spec', 'impl', 'artifacts', 'precondition: Status: Approved'],
+  ['spec', 'implementer', 'artifacts', 'only source of requirements · Affected files'],
+  ['spec', 'verifier', 'artifacts', 'ACs, Affected files, Test plan, Out of scope'],
+  ['impl', 'work', 'artifacts', 'saves verifier output → verify-<n>.md, verify.md'],
+  ['work', 'ship', 'artifacts', 'code mode requires verify.md STATUS: PASS'],
+  ['ship', 'work', 'artifacts', 'writes ship.md'],
+  ['work', 'report', 'artifacts', 'reads ship.md, verify.md, verify-*.md'],
+  ['orch', 'work', 'artifacts', 'writes run.md'],
+  ['runner', 'work', 'artifacts', 'writes run.log'],
+  ['config', 'orch', 'config', 'trello.lists.blocked'],
+  ['config', 'intake', 'config', 'lists, git.remote, baseBranch, paths'],
+  ['config', 'ship', 'config', 'git.*, github.repo, paths'],
+  ['config', 'impl', 'config', 'branchPrefix, paths, maxRetries, lists.blocked'],
+  ['config', 'report', 'config', 'lists.review, paths.workdir'],
+  ['config', 'analyst', 'config', 'paths.specs, paths.specTemplate'],
+  ['config', 'verifier', 'config', 'git.baseBranch'],
+  ['config', 'runner', 'config', 'paths.workdir'],
+  ['analyst', 'trello', 'external', 'reads card and checklists'],
+  ['intake', 'trello', 'external', 'comment; card → In progress / Blocked'],
+  ['impl', 'trello', 'external', 'card → Blocked on final failure'],
+  ['report', 'trello', 'external', 'report comment; card → Review'],
+  ['orch', 'trello', 'external', 'card → Blocked if Spec/Ship/Report fails'],
+  ['intake', 'github', 'external', 'fetch, pull --ff-only'],
+  ['ship', 'github', 'external', 'branch, commit, push feature/*, gh api check'],
+  ['verifier', 'github', 'external', 'read-only git diff vs base branch'],
+];
+const W = 150, H = 48, BW = 140;
+const svgNS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('graph');
+const active = { calls: true, loop: true, artifacts: false, config: false, external: false };
+let selected = null;
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(svgNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const defs = el('defs', {}, svg);
+for (const id in LAYERS) {
+  const m = el('marker', { id: 'arr-' + id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+  el('path', { d: 'M0,0 L10,5 L0,10 z', fill: `var(${LAYERS[id].color})` }, m);
+}
+const nw = n => n.y > 500 ? BW : W;
+function path(a, b) {
+  const A = nodes[a], B = nodes[b];
+  if (Math.abs(A.y - B.y) < 10) {
+    const dir = B.x > A.x ? 1 : -1;
+    const x1 = A.x + dir * nw(A) / 2, x2 = B.x - dir * nw(B) / 2, y = A.y + 8;
+    return `M${x1},${y} C${(x1 + x2) / 2},${y + 34} ${(x1 + x2) / 2},${y + 34} ${x2},${y}`;
+  }
+  const down = B.y > A.y;
+  const y1 = A.y + (down ? H / 2 : -H / 2), y2 = B.y + (down ? -H / 2 : H / 2);
+  const x1 = A.x + Math.max(-40, Math.min(40, (B.x - A.x) / 6));
+  const x2 = B.x + Math.max(-40, Math.min(40, (A.x - B.x) / 6));
+  const my = (y1 + y2) / 2;
+  return `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`;
+}
+const edgeG = el('g', {}, svg);
+const edgeEls = edges.map(([a, b, layer, , label]) => {
+  const g = el('g', {}, edgeG);
+  const L = LAYERS[layer];
+  const p = el('path', { class: 'edge', d: path(a, b), stroke: `var(${L.color})`, 'stroke-dasharray': L.dash, 'marker-end': `url(#arr-${layer})` }, g);
+  if (label) {
+    // point on the cubic curve at t = 0.45; works while the slide is hidden
+    const [x0, y0, cx1, cy1, cx2, cy2, x3, y3] = p.getAttribute('d').match(/-?[\d.]+/g).map(Number);
+    const t0 = 0.45, u = 1 - t0;
+    const at = (a, b, c, d) => u * u * u * a + 3 * u * u * t0 * b + 3 * u * t0 * t0 * c + t0 * t0 * t0 * d;
+    const pt = { x: at(x0, cx1, cx2, x3), y: at(y0, cy1, cy2, y3) };
+    const t = el('text', { class: 'elabel', x: pt.x + 6, y: pt.y }, g);
+    t.textContent = label;
+  }
+  return g;
+});
+const nodeG = el('g', {}, svg);
+const nodeEls = {};
+for (const id in nodes) {
+  const n = nodes[id], w = nw(n), c = `var(${KIND[n.kind][0]})`;
+  const g = el('g', { class: 'node', tabindex: 0, role: 'button', 'aria-label': n.label }, nodeG);
+  el('rect', { x: n.x - w / 2, y: n.y - H / 2, width: w, height: H, rx: 8, fill: 'var(--surface)', stroke: c }, g);
+  el('rect', { x: n.x - w / 2, y: n.y - H / 2, width: 5, height: H, rx: 2, fill: c }, g);
+  const t1 = el('text', { x: n.x + 2, y: n.y - 3, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 600, 'font-family': 'ui-monospace, Consolas, monospace' }, g);
+  t1.textContent = n.label;
+  const t2 = el('text', { class: 'sub', x: n.x + 2, y: n.y + 14, 'text-anchor': 'middle', 'font-size': 10.5 }, g);
+  t2.textContent = n.sub;
+  g.addEventListener('click', e => { e.stopPropagation(); select(selected === id ? null : id); });
+  g.addEventListener('keydown', e => { if (e.key === 'Enter') select(selected === id ? null : id); });
+  nodeEls[id] = g;
+}
+svg.addEventListener('click', () => select(null));
+
+function render() {
+  const linked = new Set(selected ? [selected] : []);
+  edges.forEach(([a, b, layer], i) => {
+    const on = active[layer];
+    edgeEls[i].style.display = on ? '' : 'none';
+    const hit = selected && (a === selected || b === selected);
+    if (on && hit) { linked.add(a); linked.add(b); }
+    edgeEls[i].classList.toggle('dim', !!selected && !hit);
+  });
+  for (const id in nodeEls) nodeEls[id].classList.toggle('dim', !!selected && !linked.has(id));
+  renderPanel();
+}
+function item(other, text, layer) {
+  const L = LAYERS[layer];
+  return `<li><b>${nodes[other].label}</b> <span class="pill" style="--c:var(${L.color});font-size:11px">${L.name}</span><span>${text}</span></li>`;
+}
+function renderPanel() {
+  const panel = document.getElementById('panel');
+  if (!selected) {
+    panel.innerHTML = `<h3>Select a component</h3><p class="desc">Click a box in the map. Upstream and downstream links stay highlighted for the layers that are on.</p>
+      <h4>Arrow direction</h4><p class="desc" style="margin:0">Calls point from caller to callee. Files, config and external arrows follow the data flow.</p>`;
+    return;
+  }
+  const n = nodes[selected];
+  const vis = edges.filter(e => active[e[2]]);
+  const out = vis.filter(e => e[0] === selected), inc = vis.filter(e => e[1] === selected);
+  panel.innerHTML = `<span class="pill" style="--c:var(${KIND[n.kind][0]})">${KIND[n.kind][1]}</span>
+    <h3 class="mono" style="margin-top:8px">${n.label}</h3><p class="desc">${n.desc}</p>
+    <h4>Incoming (${inc.length})</h4><ul>${inc.map(e => item(e[0], e[3], e[2])).join('') || '<li><span>none in visible layers</span></li>'}</ul>
+    <h4>Outgoing (${out.length})</h4><ul>${out.map(e => item(e[1], e[3], e[2])).join('') || '<li><span>none in visible layers</span></li>'}</ul>`;
+}
+function select(id) { selected = id; render(); }
+
+const toggles = document.getElementById('toggles');
+for (const id in LAYERS) {
+  const L = LAYERS[id];
+  const lab = document.createElement('label');
+  const style = L.dash === '' ? '' : L.dash.startsWith('2') ? 'dot' : 'dash';
+  lab.innerHTML = `<input type="checkbox" ${active[id] ? 'checked' : ''}><span class="sw ${style}" style="--c:var(${L.color})"></span>${L.name}`;
+  lab.querySelector('input').addEventListener('change', e => { active[id] = e.target.checked; render(); });
+  toggles.appendChild(lab);
+}
+render();
+</script>
+</body>
+</html>
