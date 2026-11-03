@@ -1,7 +1,7 @@
 # Health-2 endpoint
 
 - Trello: https://trello.com/c/jHLMdKjV/7-create-health-2-endpoint
-- Status: Approved
+- Status: Implemented
 
 ## Goal
 Provide a `/health-2` endpoint so that API users can check the availability of the service.

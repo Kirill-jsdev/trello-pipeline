@@ -17,6 +17,18 @@ describe('GET /sum', () => {
   });
 });
 
+describe('GET /health-2', () => {
+  it('AC-1: returns 200', async () => {
+    const res = await request(app).get('/health-2');
+    assert.equal(res.status, 200);
+  });
+
+  it('AC-2: returns {"status":"ok"} body', async () => {
+    const res = await request(app).get('/health-2');
+    assert.deepEqual(res.body, { status: 'ok' });
+  });
+});
+
 describe('GET /hello', () => {
   it('greets World by default', async () => {
     const res = await request(app).get('/hello');
