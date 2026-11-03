@@ -1,7 +1,7 @@
 # Health-4 endpoint
 
 - Trello: https://trello.com/c/0A2eAtsV/9-create-health-4-endpoint
-- Status: Approved
+- Status: Implemented
 
 ## Goal
 Provide a `/health-4` endpoint so that the availability of the service can be checked with a simple HTTP request.
