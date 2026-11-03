@@ -1,7 +1,7 @@
 # Health-3 endpoint
 
 - Trello: https://trello.com/c/ihPhu76y/8-create-health-3-endpoint
-- Status: Approved
+- Status: Implemented
 
 ## Goal
 Provide a lightweight `/health-3` endpoint so that the availability of the service can be checked.

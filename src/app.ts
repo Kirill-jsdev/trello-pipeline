@@ -12,6 +12,10 @@ app.get('/sum', (req, res) => {
   res.json({ result: a + b });
 });
 
+app.get('/health-3', (_req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.get('/hello', (req, res) => {
   const name = typeof req.query.name === 'string' && req.query.name ? req.query.name : 'World';
   res.json({ message: `Hello, ${name}!` });
