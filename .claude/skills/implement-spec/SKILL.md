@@ -1,6 +1,6 @@
 ---
 name: implement-spec
-description: Implement stage of the Trello pipeline. Runs the implementer subagent on an approved spec, checks the result with the verifier subagent, and retries with the verifier's FAIL report up to maxRetries times; on final failure moves the card to Blocked. Use after the spec is committed to the feature branch.
+description: "Implement stage of the Trello pipeline. Runs the implementer subagent on an approved spec, checks the result with the verifier subagent, and retries with the verifier's FAIL report up to maxRetries times; on final failure moves the card to Blocked. Use after the spec is committed to the feature branch."
 argument-hint: <card URL | short link>
 ---
 

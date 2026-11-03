@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Verifies an implementation against its spec (specs/<card>-<slug>/spec.md) — build, tests, a smoke HTTP request and a diff review — and returns a PASS/FAIL table per AC ID with evidence. Use in the Implement stage after implementer. Read-only: cannot edit files, git or Trello.
+description: "Verifies an implementation against its spec (specs/<card>-<slug>/spec.md) — build, tests, a smoke HTTP request and a diff review — and returns a PASS/FAIL table per AC ID with evidence. Use in the Implement stage after implementer. Read-only: cannot edit files, git or Trello."
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---

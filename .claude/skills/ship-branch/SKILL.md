@@ -1,6 +1,6 @@
 ---
 name: ship-branch
-description: Git stage of the Trello pipeline, in two modes. `spec` creates the feature branch from the base branch and commits the approved spec before any code. `code` commits the verified implementation with Spec and Trello-Card trailers, pushes the branch and confirms the commits on GitHub via gh api. Use `spec` after trello-intake and `code` after implement-spec passes.
+description: "Git stage of the Trello pipeline, in two modes. `spec` creates the feature branch from the base branch and commits the approved spec before any code. `code` commits the verified implementation with Spec and Trello-Card trailers, pushes the branch and confirms the commits on GitHub via gh api. Use `spec` after trello-intake and `code` after implement-spec passes."
 argument-hint: spec|code <card URL | short link>
 ---
 

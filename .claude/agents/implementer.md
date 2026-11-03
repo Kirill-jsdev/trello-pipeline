@@ -1,6 +1,6 @@
 ---
 name: implementer
-description: Implements a feature strictly by its spec (specs/<card>-<slug>/spec.md) — code plus tests whose names start with AC IDs. Use in the Implement stage after the spec is committed; on retries it receives the verifier's FAIL report. Does not touch git or Trello.
+description: "Implements a feature strictly by its spec (specs/<card>-<slug>/spec.md) — code plus tests whose names start with AC IDs. Use in the Implement stage after the spec is committed; on retries it receives the verifier's FAIL report. Does not touch git or Trello."
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: sonnet
 ---

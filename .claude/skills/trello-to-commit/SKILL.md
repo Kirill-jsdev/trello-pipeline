@@ -1,6 +1,6 @@
 ---
 name: trello-to-commit
-description: Full Trello pipeline orchestrator. Takes a Trello card from To Do to a pushed feature branch with a spec commit and a code commit, by running trello-intake, ship-branch spec, implement-spec, ship-branch code and trello-report in order and stopping on the first failure. Use when asked to process, implement or ship a Trello card end to end.
+description: "Full Trello pipeline orchestrator. Takes a Trello card from To Do to a pushed feature branch with a spec commit and a code commit, by running trello-intake, ship-branch spec, implement-spec, ship-branch code and trello-report in order and stopping on the first failure. Use when asked to process, implement or ship a Trello card end to end."
 argument-hint: <card URL | short link>
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: trello-report
-description: Report stage of the Trello pipeline. Posts the final result to the Trello card — branch, spec link, commits and the AC table from the verifier — moves the card to Review and saves the report to .pipeline/<card>/report.md. Use after ship-branch code succeeds.
+description: "Report stage of the Trello pipeline. Posts the final result to the Trello card — branch, spec link, commits and the AC table from the verifier — moves the card to Review and saves the report to .pipeline/<card>/report.md. Use after ship-branch code succeeds."
 argument-hint: <card URL | short link>
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: trello-analyst
-description: Reads a Trello card (User Story + Acceptance Criteria) and turns it into a spec in specs/<card>-<slug>/spec.md using specs/_template.md. Use as the first (Intake) stage of the pipeline. Does not modify code, git or Trello.
+description: "Reads a Trello card (User Story + Acceptance Criteria) and turns it into a spec in specs/<card>-<slug>/spec.md using specs/_template.md. Use as the first (Intake) stage of the pipeline. Does not modify code, git or Trello."
 tools: Read, Grep, Glob, Write, mcp__trello__trelloReadCard, mcp__trello__trelloReadChecklist
 model: sonnet
 ---

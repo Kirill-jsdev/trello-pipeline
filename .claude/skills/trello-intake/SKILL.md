@@ -1,6 +1,6 @@
 ---
 name: trello-intake
-description: Intake stage of the Trello pipeline. Runs preflight checks, turns a Trello card into an approved spec in specs/<card>-<slug>/spec.md via the trello-analyst subagent, and moves the card to In progress (or to Blocked with questions). Use when starting work on a Trello card.
+description: "Intake stage of the Trello pipeline. Runs preflight checks, turns a Trello card into an approved spec in specs/<card>-<slug>/spec.md via the trello-analyst subagent, and moves the card to In progress (or to Blocked with questions). Use when starting work on a Trello card."
 argument-hint: <card URL | short link>
 ---
 
